@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maintenance Report</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #4a4a4a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4a4a4a;
+            margin: 15px 0;
+            font-size: 1.4em;
+            padding-bottom: 5px;
+            text-align: center; /* Center the heading */
+        }
+        .issues-container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s;
+        }
+        li:hover {
+            background-color: #e0e0e0;
+        }
+        .reason-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #ffffff;
+            resize: vertical;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s;
+            font-size: 0.9em;
+        }
+        .reason-input:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        .next-button, .submit-button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .next-button {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .next-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .submit-button {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .submit-button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+        .spacer {
+            margin-top: 40px;
+        }
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0, 0, 0, 0.5); 
+            padding-top: 60px; 
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 400px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .alert-title {
+            font-size: 1.25em;
+            margin-bottom: 10px;
+            color: #d9534f;
+        }
+        .alert-list {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Maintenance Report</h1>
+    <div class="issues-container">
+        <h2>Provide a reason for Pending/Incomplete status</h2>
+        <ul id="issuesList">
+            <!-- Dynamically populated list will go here -->
+        </ul>
+    </div>
+
+    <div class="button-container">
+        <button class="next-button" onclick="goBack()">Previous</button>
+        <button class="submit-button" onclick="submitReasons()">Submit</button>
+    </div>
+    
+    <div class="spacer"></div>
+
+    <!-- Modal for missing reasons -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="alert-title">Missing Reasons</div>
+            <p>Please enter a reason for the following pending/incomplete statuses:</p>
+            <ul id="missingItemsList" class="alert-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        function populateIssues() {
+            const issuesList = document.getElementById('issuesList');
+            const pendingItems = JSON.parse(localStorage.getItem('pendingItems')) || [];
+
+            if (pendingItems.length === 0) {
+                issuesList.innerHTML = '<li>No Pending or Incomplete items.</li>';
+            } else {
+                pendingItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'reason-input';
+                    textarea.placeholder = 'Provide reason here...';
+                    textarea.setAttribute('data-item', item);
+                    
+                    li.appendChild(textarea);
+                    issuesList.appendChild(li);
+                });
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+        function submitReasons() {
+            const reasons = Array.from(document.querySelectorAll('.reason-input'));
+            const emptyReasons = reasons.filter(textarea => textarea.value.trim() === '');
+
+            if (emptyReasons.length > 0) {
+                const missingItemsList = document.getElementById('missingItemsList');
+                missingItemsList.innerHTML = '';
+
+                emptyReasons.forEach(textarea => {
+                    const itemName = textarea.getAttribute('data-item');
+                    const li = document.createElement('li');
+                    li.textContent = itemName;
+                    missingItemsList.appendChild(li);
+                });
+
+                document.getElementById('myModal').style.display = 'block';
+            } else {
+                window.location.href = "Page 3.html";
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('myModal').style.display = 'none';
+        }
+
+        window.onload = populateIssues;
+    </script>
+</body>
+</html>
