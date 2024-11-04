@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Confirmation</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2em;
+            color: #4a4a4a;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .confirmation-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #28a745;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2em;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        .confirmation-circle:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Your report has been successfully submitted. :)</h1>
+    <div class="confirmation-circle">✔</div>
+
+    <script>
+        function createAndDownloadFile() {
+            const maintenanceData = JSON.parse(localStorage.getItem('maintenanceData')) || {};
+            const reasons = maintenanceData.reasons || 'Everything is complete.';
+
+            // Split reasons into an array
+            const reasonsArray = reasons.split('\n');
+
+            // Format each reason
+            const formattedReasons = reasonsArray.map(reason => {
+                // Check if the reason is related to pending/incomplete
+                if (reason.toLowerCase().includes("pending") || reason.toLowerCase().includes("incomplete")) {
+                    return `* ${reason}`; // Asterisk for pending/incomplete reasons
+                }
+                return `- ${reason}`; // Hyphen for all other reasons
+            }).join('\n');
+
+            const content = `Weekly Maintenance Report\n\n` +
+                            `Name: ${maintenanceData.name}\n` +
+                            `LGV Number: ${maintenanceData.lgvNumber}\n` +
+                            `Date: ${maintenanceData.date}\n` +
+                            `Week Number: ${maintenanceData.weekNumber}\n` +
+                            `Time: ${maintenanceData.time}\n\n` +
+                            `Reasons:\n${formattedReasons}`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${maintenanceData.weekNumber}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        window.onload = function() {
+            createAndDownloadFile();
+        };
+    </script>
+</body>
+</html>
