@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Maintenance Report</title>
+    <style>
+        body {
+            background-color: #f0f4f8;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #4a4a4a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        .info-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        .header-row, .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .header-item, .info-item {
+            flex: 1;
+            text-align: center;
+        }
+        .header-item {
+            font-weight: bold;
+        }
+        .info-item span {
+            display: block;
+            margin-top: 4%;
+        }
+        .name-input, .lgv-select {
+            width: 80%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .next-button, .submit-button {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.2s;
+            margin-top: 20px;
+        }
+        .next-button {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .next-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .submit-button {
+            background-color: #28a745;
+            color: #fff;
+        }
+        .submit-button:disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
+        .submit-button:hover:enabled {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+        .reasons-container {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .reasons-container h2 {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 10px;
+            margin-top: 0;
+        }
+        .reason-item {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .reason-text {
+            margin-top: 5px;
+            font-weight: normal;
+            color: #555;
+        }
+        .reason-item:hover {
+            background-color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weekly Maintenance Report</h1>
+    <div class="info-container">
+        <div class="header-row">
+            <div class="header-item">Name</div>
+            <div class="header-item">LGV Number</div>
+            <div class="header-item">Date</div>
+            <div class="header-item">Week Number</div>
+            <div class="header-item">Time</div>
+        </div>
+        <div class="info-row">
+            <div class="info-item">
+                <input type="text" class="name-input" id="nameInput" placeholder="Enter Name" oninput="toggleSubmitButton()">
+            </div>
+            <div class="info-item">
+                <select class="lgv-select" id="lgvSelect">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
+            <div class="info-item">
+                <span id="currentDate"></span>
+            </div>
+            <div class="info-item">
+                <span id="currentWeek"></span>
+            </div>
+            <div class="info-item">
+                <span id="currentTime"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="reasons-container" id="reasonsContainer" style="display: none;">
+        <h2>Reasons for Pending/Incomplete Status:</h2>
+        <div id="reasonsList"></div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <button class="next-button" onclick="window.history.back()">Previous</button>
+        <button class="submit-button" id="submitButton" disabled onclick="submitData()">Submit</button>
+    </div>
+
+    <script>
+        function setCurrentDateAndWeek() {
+            const dateElement = document.getElementById('currentDate');
+            const weekElement = document.getElementById('currentWeek');
+            const timeElement = document.getElementById('currentTime');
+
+            const today = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', locale: 'en-US' };
+            dateElement.textContent = today.toLocaleDateString('en-US', options);
+
+            const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+            const pastDaysOfYear = (today - firstDayOfYear) / 86400000;
+            const weekNumber = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            weekElement.textContent = weekNumber;
+
+            timeElement.textContent = today.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function displayReasons() {
+            const reasonsContainer = document.getElementById('reasonsContainer');
+            const reasonsList = document.getElementById('reasonsList');
+            const reasonsData = JSON.parse(localStorage.getItem('reasonsData')) || {};
+
+            reasonsList.innerHTML = ''; // Clear any previous entries
+
+            if (Object.keys(reasonsData).length > 0) {
+                for (const [itemName, reason] of Object.entries(reasonsData)) {
+                    const reasonDiv = document.createElement('div');
+                    reasonDiv.className = 'reason-item';
+                    reasonDiv.innerHTML = `<strong>${itemName}:</strong><div class="reason-text">${reason}</div>`;
+                    reasonsList.appendChild(reasonDiv);
+                }
+                reasonsContainer.style.display = 'block';
+            } else {
+                reasonsContainer.style.display = 'none'; // Hide if no reasons
+            }
+        }
+
+        function toggleSubmitButton() {
+            const nameInput = document.getElementById('nameInput');
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = nameInput.value.trim() === '';
+        }
+
+        function submitData() {
+            const nameInput = document.getElementById('nameInput').value;
+            const lgvNumber = document.getElementById('lgvSelect').value;
+            const currentDate = document.getElementById('currentDate').textContent;
+            const currentWeek = document.getElementById('currentWeek').textContent;
+            const currentTime = document.getElementById('currentTime').textContent;
+
+            const reasonsData = JSON.parse(localStorage.getItem('reasonsData')) || {};
+            const reasonsText = Object.keys(reasonsData).length > 0 ? Object.entries(reasonsData).map(([key, value]) => `${key}: ${value}`).join('\n') : 'Everything is complete.';
+
+            // Store the collected data in localStorage
+            localStorage.setItem('maintenanceData', JSON.stringify({
+                name: nameInput,
+                lgvNumber: lgvNumber,
+                date: currentDate,
+                weekNumber: currentWeek,
+                time: currentTime,
+                reasons: reasonsText // Store reasons as a formatted string
+            }));
+
+            // Redirect to Page 4
+            window.location.href = "Page 4.html";
+        }
+
+        window.onload = function() {
+            setCurrentDateAndWeek();
+            displayReasons();
+        };
+    </script>
+</body>
+</html>
